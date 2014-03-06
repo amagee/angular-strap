@@ -45,8 +45,21 @@ angular.module('mgcrea.ngStrap.helpers.parseOptions', [])
           return values.map(function(match, index) {
             var locals = {}, label, value;
             locals[valueName] = match;
-            label = displayFn(locals);
-            value = valueFn(locals) || index;
+
+            if (config != null && config.keyField != null) {
+              label = match[config.keyField];
+            }
+            else {
+              label = displayFn(locals);
+            }
+
+            if (config != null && config.valueField != null) {
+              value = match[config.valueField];
+            }
+            else {
+              value = valueFn(locals) || index;
+            }
+
             return {label: label, value: value};
           });
         }

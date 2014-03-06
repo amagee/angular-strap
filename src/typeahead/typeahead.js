@@ -68,9 +68,17 @@ angular.module('mgcrea.ngStrap.typeahead', ['mgcrea.ngStrap.tooltip', 'mgcrea.ng
         };
 
         $typeahead.select = function(index) {
-          var value = scope.$matches[index].value;
+          var value = scope.$matches[index];
+
           if(controller) {
-            controller.$setViewValue(value);
+            controller.$setViewValue(value.value);
+            // This is a bit of a hack. We rely on $setViewValue to propagate
+            // the value to the model, and we want `value.value` sent to the
+            // model, so we have to pass `value.value` to $setViewValue.
+            // But we want the actual view value to be `value.label`, so we
+            // manually update that variable after calling $setViewValue but
+            // before calling $render.
+            controller.$viewValue = value.label;
             controller.$render();
             if(parentScope) parentScope.$digest();
           }
@@ -78,7 +86,7 @@ angular.module('mgcrea.ngStrap.typeahead', ['mgcrea.ngStrap.tooltip', 'mgcrea.ng
           else if($typeahead.$isShown) $typeahead.hide();
           scope.$activeIndex = 0;
           // Emit event
-          scope.$emit('$typeahead.select', value, index);
+          scope.$emit('$typeahead.select', value.value, index);
         };
 
         // Protected methods
@@ -155,7 +163,6 @@ angular.module('mgcrea.ngStrap.typeahead', ['mgcrea.ngStrap.tooltip', 'mgcrea.ng
       restrict: 'EAC',
       require: 'ngModel',
       link: function postLink(scope, element, attr, controller) {
-
         // Directive options
         var options = {scope: scope, controller: controller};
         angular.forEach(['placement', 'container', 'delay', 'trigger', 'keyboard', 'html', 'animation', 'template', 'filter', 'limit', 'minLength'], function(key) {
@@ -163,12 +170,20 @@ angular.module('mgcrea.ngStrap.typeahead', ['mgcrea.ngStrap.tooltip', 'mgcrea.ng
         });
 
         // Build proper ngOptions
-        var filter = options.filter || defaults.filter;
+        var filter = options.filter ? 
+                     options.filter + ":$viewValue" :
+                     "filter:{" + attr.keyField + ":$viewValue}";
         var limit = options.limit || defaults.limit;
         var ngOptions = attr.ngOptions;
+        
         if(filter) ngOptions += ' | ' + filter + ':$viewValue';
         if(limit) ngOptions += ' | limitTo:' + limit;
-        var parsedOptions = $parseOptions(ngOptions);
+
+        var parseOptionsOptions = {
+          keyField: attr.keyField,
+          valueField: attr.valueField
+        };
+        var parsedOptions = $parseOptions(ngOptions, parseOptionsOptions);
 
         // Initialize typeahead
         var typeahead = $typeahead(element, options);
