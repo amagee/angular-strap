@@ -31,6 +31,7 @@ angular.module('mgcrea.ngStrap.helpers.parseOptions', [])
           valuesFn = $parse(match[7]);
         };
 
+
         $parseOptions.valuesFn = function(scope, controller) {
           return $q.when(valuesFn(scope, controller))
           .then(function(values) {
@@ -46,8 +47,8 @@ angular.module('mgcrea.ngStrap.helpers.parseOptions', [])
             var locals = {}, label, value;
             locals[valueName] = match;
 
-            if (config != null && config.keyField != null) {
-              label = match[config.keyField];
+            if (config != null && config.textField != null) {
+              label = match[config.textField];
             }
             else {
               label = displayFn(locals);

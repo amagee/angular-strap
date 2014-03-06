@@ -1595,6 +1595,7 @@ angular.module('mgcrea.ngStrap.helpers.parseOptions', [])
 
         $parseOptions.init = function() {
           $parseOptions.$match = match = attr.match(options.regexp);
+          console.log("match", match);
           displayFn = $parse(match[2] || match[1]),
           valueName = match[4] || match[6],
           keyName = match[5],
@@ -1602,6 +1603,7 @@ angular.module('mgcrea.ngStrap.helpers.parseOptions', [])
           valueFn = $parse(match[2] ? match[1] : valueName),
           valuesFn = $parse(match[7]);
         };
+
 
         $parseOptions.valuesFn = function(scope, controller) {
           return $q.when(valuesFn(scope, controller))
@@ -1618,8 +1620,8 @@ angular.module('mgcrea.ngStrap.helpers.parseOptions', [])
             var locals = {}, label, value;
             locals[valueName] = match;
 
-            if (config != null && config.keyField != null) {
-              label = match[config.keyField];
+            if (config != null && config.textField != null) {
+              label = match[config.textField];
             }
             else {
               label = displayFn(locals);
@@ -3711,7 +3713,7 @@ angular.module('mgcrea.ngStrap.typeahead', ['mgcrea.ngStrap.tooltip', 'mgcrea.ng
         // Build proper ngOptions
         var filter = options.filter ? 
                      options.filter + ":$viewValue" :
-                     "filter:{" + attr.keyField + ":$viewValue}";
+                     "filter:{" + attr.textField + ":$viewValue}";
         var limit = options.limit || defaults.limit;
         var ngOptions = attr.ngOptions;
         
@@ -3719,13 +3721,19 @@ angular.module('mgcrea.ngStrap.typeahead', ['mgcrea.ngStrap.tooltip', 'mgcrea.ng
         if(limit) ngOptions += ' | limitTo:' + limit;
 
         var parseOptionsOptions = {
-          keyField: attr.keyField,
+          textField: attr.textField,
           valueField: attr.valueField
         };
         var parsedOptions = $parseOptions(ngOptions, parseOptionsOptions);
 
         // Initialize typeahead
         var typeahead = $typeahead(element, options);
+
+        if (scope[attr.formatter]) {
+          controller.$formatters = [function(i) {
+            return scope[attr.formatter](i);
+          }];
+        }
 
         // Watch model for changes
         scope.$watch(attr.ngModel, function(newValue, oldValue) {

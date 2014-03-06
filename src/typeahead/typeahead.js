@@ -172,7 +172,7 @@ angular.module('mgcrea.ngStrap.typeahead', ['mgcrea.ngStrap.tooltip', 'mgcrea.ng
         // Build proper ngOptions
         var filter = options.filter ? 
                      options.filter + ":$viewValue" :
-                     "filter:{" + attr.keyField + ":$viewValue}";
+                     "filter:{" + attr.textField + ":$viewValue}";
         var limit = options.limit || defaults.limit;
         var ngOptions = attr.ngOptions;
         
@@ -180,13 +180,19 @@ angular.module('mgcrea.ngStrap.typeahead', ['mgcrea.ngStrap.tooltip', 'mgcrea.ng
         if(limit) ngOptions += ' | limitTo:' + limit;
 
         var parseOptionsOptions = {
-          keyField: attr.keyField,
+          textField: attr.textField,
           valueField: attr.valueField
         };
         var parsedOptions = $parseOptions(ngOptions, parseOptionsOptions);
 
         // Initialize typeahead
         var typeahead = $typeahead(element, options);
+
+        if (scope[attr.formatter]) {
+          controller.$formatters = [function(i) {
+            return scope[attr.formatter](i);
+          }];
+        }
 
         // Watch model for changes
         scope.$watch(attr.ngModel, function(newValue, oldValue) {
